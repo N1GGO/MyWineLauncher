@@ -43,24 +43,6 @@ struct ContentView: View {
 
             Text(viewModel.state.stateText)
             
-            HStack {
-                Spacer()
-                
-                Button {
-                    Task {
-                        await viewModel.scanForSteamGames()
-                        showingSteamGamesSheet = true
-                    }
-                } label: {
-                    Label("Steam-Spiele scannen", systemImage: "magnifyingglass")
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.applications.filter { 
-                    $0.executableURL.lastPathComponent.lowercased() == "steam.exe"
-                }.isEmpty)
-            }
-            .padding(.horizontal)
-
             ScrollView {
                 LazyVGrid(
                     columns: columns,
@@ -114,16 +96,6 @@ struct ContentView: View {
                     "WineLauncher: Dateiauswahl fehlgeschlagen – \(error)"
                 )
             }
-        }
-        .sheet(isPresented: $showingSteamGamesSheet) {
-            SteamGamesListView(
-                games: viewModel.discoveredSteamGames,
-                onAdd: { game in
-                    Task {
-                        await viewModel.addSteamGameToLauncher(game)
-                    }
-                }
-            )
         }
 
 
@@ -253,14 +225,6 @@ struct ContentView: View {
                         )
                     }
                     
-                    // Steam-spezifische Optionen
-                    if application.executableURL.lastPathComponent.lowercased() == "steam.exe" {
-                        Divider()
-                        
-                        Button("Steam optimieren...") {
-                            showSteamSetupWindow(for: application.prefixURL)
-                        }
-                    }
 
                     Divider()
 
@@ -348,22 +312,4 @@ struct ContentView: View {
         }
     }
     
-    // Zeigt das Steam-Setup in einem separaten Window
-    private func showSteamSetupWindow(for prefixURL: URL) {
-        let setupView = SteamSetupView(prefixURL: prefixURL) {
-            print("WineLauncher: Steam-Optimierungen installiert")
-        }
-        
-        let hostingController = NSHostingController(rootView: setupView)
-        
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Steam-Optimierungen"
-        window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 600, height: 500))
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        window.isReleasedWhenClosed = false
-        
-        steamSetupWindow = window
-    }
 }
